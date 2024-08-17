@@ -37,7 +37,7 @@ async function fetchBoardMembers(): Promise<BoardMember[]> {
 async function addBoardMember({ name }: {name : string}) {
   try {
     const docRef = await addDoc(collection(db, "BoardMembers"), {
-      name,
+      "Name": name,
     });
     console.log("Document written with ID: ", docRef.id);
     return docRef; // Return the document reference with the generated id
@@ -50,18 +50,21 @@ async function addBoardMember({ name }: {name : string}) {
 const removeBoardMember = async (name : string) =>{
   try {
     const memberRef = collection(db, "BoardMembers");
+
+    // query to find board member
     const q = query(memberRef, where("Name", "==", name));
-    console.log(q);
-    // const docRef = doc(db, "BoardMembers", name)
+
+    // returns all the docs that were found in that query
     const docSnap = await getDocs(q)
 
-    docSnap.forEach((doc) => {
-      console.log(doc);
-  });
-    console.log(docSnap);
+
     if (docSnap) {
+      // for all occurences it will delete them
       docSnap.forEach(async (docs) => {
+        // takes the id from that doc found
         const docRef = doc(db, "BoardMembers", docs.id);
+
+        // deletes it
         await deleteDoc(docRef)
     });
     }
@@ -69,6 +72,30 @@ const removeBoardMember = async (name : string) =>{
   } catch (e) {
     console.error("Error deleting document", name);
   }
+
+  // const updatePantry = async () => {
+  //   const snapshot = collection(db, "pantry");
+  //   const docs = await getDocs(snapshot);
+  //   const pantryList = [];
+  //   docs.forEach((doc) => {
+  //     pantryList.push({ name: doc.id, ...doc.data() });
+  //   });
+  //   setPantry(pantryList);
+  // };
 }
 
-export { app, db, fetchBoardMembers, addBoardMember, removeBoardMember };
+const updateBoard = async () => {
+  const snapshot = collection(db, "BoardMembers")
+  const docs = await getDocs(snapshot);
+  const BoardMembers: BoardMember[] = [];
+  docs.forEach((doc) => {
+    BoardMembers.push({ 
+      name: doc.data().Name,
+      id: doc.id
+    })
+  })
+  console.log(BoardMembers);
+  return BoardMembers;
+}
+
+export { app, db, fetchBoardMembers, addBoardMember, removeBoardMember, updateBoard };

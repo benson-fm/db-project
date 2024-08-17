@@ -5,6 +5,7 @@ import {
   fetchBoardMembers,
   addBoardMember,
   removeBoardMember,
+  updateBoard,
 } from "./firebase";
 
 interface BoardMember {
@@ -17,21 +18,17 @@ export default function Home() {
   const [nameDelete, setNameDelete] = useState("");
   const [boardMembers, setBoardMembers] = useState<BoardMember[]>([]);
 
-  useEffect(() => {
-    fetchBoardMembers()
-      .then((boardMembers: BoardMember[]) => setBoardMembers(boardMembers))
-      .catch((error) => console.error("Error fetching board members:", error));
-  }, []);
-
   const handleAddMember = async () => {
     if (name) {
       try {
-        const docRef = await addBoardMember({ name });
-        setBoardMembers((prevMembers) => [
-          ...prevMembers,
-          { id: docRef.id, name },
-        ]);
+        await addBoardMember({ name });
+        // setBoardMembers((prevMembers) => [
+        //   ...prevMembers,
+        //   { id: docRef.id, name },
+        // ]);
         setName("");
+        await handleUpdateBoard();
+
       } catch (error) {
         console.error("Error adding board member:", error);
       }
@@ -40,14 +37,25 @@ export default function Home() {
 
   const handleDeleteMember = async (name: string) => {
     try {
-      
       await removeBoardMember(name);
       setName("");
-      setBoardMembers((prevMembers) => [...prevMembers]);
+      await handleUpdateBoard();
     } catch (error) {
       console.log(error);
     }
   };
+
+  const handleUpdateBoard = () => {
+    updateBoard()
+    .then((boardMembers: BoardMember[]) => setBoardMembers(boardMembers))
+    .catch((error) => console.error("Error fetching baord members: ", error));
+  }
+
+  useEffect(() => {
+    handleUpdateBoard();
+  }, []);
+
+
 
   return (
     <div>
