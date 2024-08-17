@@ -40,6 +40,7 @@ export default function Home() {
 
   const handleDeleteMember = async (name: string) => {
     try {
+      
       await removeBoardMember(name);
       setName("");
       setBoardMembers((prevMembers) => [...prevMembers]);

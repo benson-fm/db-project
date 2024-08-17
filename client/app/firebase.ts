@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, getDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, getDoc, query, where } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_DB_API_KEY,
@@ -49,11 +49,21 @@ async function addBoardMember({ name }: {name : string}) {
 
 const removeBoardMember = async (name : string) =>{
   try {
-    const docRef = doc(db, "BoardMembers", name)
-    const docSnap = await getDoc(docRef)
+    const memberRef = collection(db, "BoardMembers");
+    const q = query(memberRef, where("Name", "==", name));
+    console.log(q);
+    // const docRef = doc(db, "BoardMembers", name)
+    const docSnap = await getDocs(q)
 
+    docSnap.forEach((doc) => {
+      console.log(doc);
+  });
+    console.log(docSnap);
     if (docSnap) {
-      await deleteDoc(docRef);
+      docSnap.forEach(async (docs) => {
+        const docRef = doc(db, "BoardMembers", docs.id);
+        await deleteDoc(docRef)
+    });
     }
 
   } catch (e) {
