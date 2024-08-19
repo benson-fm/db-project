@@ -1,5 +1,16 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, getDoc, query, where } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+  updateDoc,
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_DB_API_KEY,
@@ -19,25 +30,10 @@ interface BoardMember {
   id: string;
 }
 
-async function fetchBoardMembers(): Promise<BoardMember[]> {
-  const querySnapshot = await getDocs(collection(db, "BoardMembers"));
-  const boardMembers: BoardMember[] = [];
-
-  querySnapshot.forEach((doc) => {
-    boardMembers.push({
-      name: doc.data().Name,
-      id: doc.id, // Set id directly from doc.id
-    });
-  });
-
-  console.log(boardMembers)
-  return boardMembers;
-}
-
-async function addBoardMember({ name }: {name : string}) {
+async function addBoardMember({ name }: { name: string }) {
   try {
     const docRef = await addDoc(collection(db, "BoardMembers"), {
-      "Name": name,
+      Name: name,
     });
     console.log("Document written with ID: ", docRef.id);
     return docRef; // Return the document reference with the generated id
@@ -47,7 +43,7 @@ async function addBoardMember({ name }: {name : string}) {
   }
 }
 
-const removeBoardMember = async (name : string) =>{
+const removeBoardMember = async (name: string) => {
   try {
     const memberRef = collection(db, "BoardMembers");
 
@@ -55,8 +51,7 @@ const removeBoardMember = async (name : string) =>{
     const q = query(memberRef, where("Name", "==", name));
 
     // returns all the docs that were found in that query
-    const docSnap = await getDocs(q)
-
+    const docSnap = await getDocs(q);
 
     if (docSnap) {
       // for all occurences it will delete them
@@ -65,37 +60,49 @@ const removeBoardMember = async (name : string) =>{
         const docRef = doc(db, "BoardMembers", docs.id);
 
         // deletes it
-        await deleteDoc(docRef)
-    });
+        await deleteDoc(docRef);
+      });
     }
-
   } catch (e) {
     console.error("Error deleting document", name);
   }
-
-  // const updatePantry = async () => {
-  //   const snapshot = collection(db, "pantry");
-  //   const docs = await getDocs(snapshot);
-  //   const pantryList = [];
-  //   docs.forEach((doc) => {
-  //     pantryList.push({ name: doc.id, ...doc.data() });
-  //   });
-  //   setPantry(pantryList);
-  // };
-}
+};
 
 const updateBoard = async () => {
-  const snapshot = collection(db, "BoardMembers")
+  const snapshot = collection(db, "BoardMembers");
   const docs = await getDocs(snapshot);
   const BoardMembers: BoardMember[] = [];
   docs.forEach((doc) => {
-    BoardMembers.push({ 
+    BoardMembers.push({
       name: doc.data().Name,
-      id: doc.id
-    })
-  })
+      id: doc.id,
+    });
+  });
   console.log(BoardMembers);
   return BoardMembers;
-}
+};
 
-export { app, db, fetchBoardMembers, addBoardMember, removeBoardMember, updateBoard };
+const updateBoardMember = async (nameSearch: string, nameNew: string) => {
+  const memberRef = collection(db, "BoardMembers");
+
+    // query to find board member
+  const q = query(memberRef, where("Name", "==", nameSearch));
+    // returns all the docs that were found in that query
+  const docSnap = await getDocs(q);
+
+  docSnap.forEach(async (docs) => {
+    const ref = doc(db, "BoardMembers", docs.id);
+    await updateDoc(ref, {
+      Name: nameNew,
+    });
+  });
+};
+
+export {
+  app,
+  db,
+  addBoardMember,
+  removeBoardMember,
+  updateBoard,
+  updateBoardMember,
+};
